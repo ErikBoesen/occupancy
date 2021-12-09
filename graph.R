@@ -9,12 +9,12 @@ hall_ids <- c('BK', 'BR', 'GH', 'DC', 'MC', 'JE', 'PC', 'SM', 'TD', 'SY', 'ES', 
 
 create_scatterplot <- function(hall_id) {
     ggplot(subset(data, dhall == hall_id), aes(x=timestamp, y=crowdedness, color=dhall)) +
-        geom_point(alpha=0.01)
+        geom_point(alpha=0.05)
 }
 
 png(file = "timeline.png")
 ggplot(data, aes(x=timestamp, y=crowdedness, color=dhall)) +
-    geom_point(alpha=0.01)
+    geom_point(alpha=0.05)
 
 png(file = "daily.png", width=2000, height=6000)
 hall_plots <- lapply(hall_ids, create_scatterplot)
