@@ -9,6 +9,7 @@ with open('occupancy_raw.csv', newline='') as f:
         {k: v for k, v in row.items()}
         for row in csv.DictReader(f, skipinitialspace=True)
     ]
+records = sorted(records, key=lambda record: record['datetime'])
 
 records_deduplicated = []
 
@@ -73,9 +74,10 @@ for record in records:
             print(record)
             continue
         current_meals[hall_id] = {
+            'date': timestamp.strftime('%Y-%m-%d'),
             'hall_id': hall_id,
             'name': chosen_meal['name'],
-            'start': chosen_meal['start'],G
+            'start': chosen_meal['start'],
             'end': chosen_meal['end'],
             'records': [record],
         }
@@ -83,15 +85,36 @@ for record in records:
 with open('meals.json', 'w') as f:
     json.dump(meals, f)
 
-for meal in meals:
+def time_elapsed(start_time: datetime.time, end_time: datetime.time):
+    date = datetime.date(1, 1, 1)
+    start_datetime = datetime.datetime.combine(date, start_time)
+    end_datetime = datetime.datetime.combine(date, end_time)
+    #print(start_datetime)
+    #print(end_datetime)
+    #print(end_datetime - start_datetime)
+    #print((end_datetime - start_datetime).total_seconds())
+    return (end_datetime - start_datetime).total_seconds()
+
+for i, meal in enumerate(meals):
     total_occupancy = 0
     start = datetime.datetime.strptime(meal['start'], '%H:%M').time()
     end = datetime.datetime.strptime(meal['end'], '%H:%M').time()
-    total_time = (end - start)
 
     last_occupancy = 0
-    last_end = start
+    last_time = start
     for record in meal.pop('records'):
-        occupancy = record['crowdedness']
-        time = datetime.datetime.strptime(record['datetime'], '%Y-%m-%d %H:%M:%S.%f')
-        last_end =
+        occupancy = int(record['crowdedness'])
+        time = datetime.datetime.strptime(record['datetime'], '%Y-%m-%d %H:%M:%S.%f').time()
+        total_occupancy += time_elapsed(last_time, time) * last_occupancy
+        last_time = time
+        last_occupancy = occupancy
+    total_occupancy += time_elapsed(last_time, end) * last_occupancy
+    average_occupancy = total_occupancy / time_elapsed(start, end)
+    meal['average_occupancy'] = average_occupancy
+
+    meals[i] = meal
+
+with open('meals.csv', 'w') as f:
+    dict_writer = csv.DictWriter(f, meals[0].keys())
+    dict_writer.writeheader()
+    dict_writer.writerows(meals)
