@@ -82,6 +82,8 @@ for record in records:
             'records': [record],
         }
 
+meals = sorted(meals, key=lambda meal: (meal['date'], meal['start'], meal['hall_id']))
+
 with open('meals.json', 'w') as f:
     json.dump(meals, f)
 
@@ -97,6 +99,7 @@ def time_elapsed(start_time: datetime.time, end_time: datetime.time):
 
 for i, meal in enumerate(meals):
     total_occupancy = 0
+    max_occupancy = 0
     start = datetime.datetime.strptime(meal['start'], '%H:%M').time()
     end = datetime.datetime.strptime(meal['end'], '%H:%M').time()
 
@@ -105,12 +108,18 @@ for i, meal in enumerate(meals):
     for record in meal.pop('records'):
         occupancy = int(record['crowdedness'])
         time = datetime.datetime.strptime(record['datetime'], '%Y-%m-%d %H:%M:%S.%f').time()
+
         total_occupancy += time_elapsed(last_time, time) * last_occupancy
         last_time = time
         last_occupancy = occupancy
+
+        if occupancy > max_occupancy:
+            max_occupancy = occupancy
+
     total_occupancy += time_elapsed(last_time, end) * last_occupancy
     average_occupancy = total_occupancy / time_elapsed(start, end)
     meal['average_occupancy'] = average_occupancy
+    meal['max_occupancy'] = max_occupancy
 
     meals[i] = meal
 
