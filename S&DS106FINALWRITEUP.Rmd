@@ -27,12 +27,28 @@ This is a rough template that will work for many projects. What goes in the repo
 An overview of your report, including one or so sentences on each of these:
 
 - a non-technical description of the problem you are trying to solve or the question you are trying to answer, and why you are trying to answer that question 
+
+      - see if there is a correlation between dining hall occupancy and New Haven weather 
+      
 - a non-technical description of the data, where it came from, and what it contains, including the predictors, the outcome, and the observations 
+
+      -[@ ERIK, can you quickly jot stuff down here, it can be note style I'll fix it up before we submit]
+      
 - a non-technical description of what kind of analysis you did and how to interpret the results of the model
+
+      - multiple regression model with the variables 'prcp' 'tmax' and 'tmin' in order to predict occupancy 
+      
 - a non-technical description of the results of the model and main takeaways.
 
+      - TBD 
+      
 ## Data exploration and visualization 
 This section will have descriptive statistics and visualizations of the raw data.  Reveal to the reader any interesting relationships in the data, and if you are doing multiple regression, convince the reader that the predictors are related to the outcome. Visualizations are one of the most powerful ways to communicate information to the reader, so it is important to spend time producing clear, descriptive, eye-catching visualizations.
+
+    -visual representation of the data (i.e occupancy and time ... what is our time interval??) w/out             multiple regression model  
+    -maybe start off with some graphs between predictors and occupancy for the "visualization" part then run      lm for each graph to "convince the reader that the predictors are related to the outcome"  
+    
+    
 
 ## Modeling/Analysis
 Describe the regression model(s) used or the analysis that was performed. For each regression model, discuss 
@@ -44,6 +60,9 @@ Describe the regression model(s) used or the analysis that was performed. For ea
 - whether or not you think the model is appropriate for this kind of data, and why
 - how easy/hard it is to interpret the results and explain them to either a technical or non-technical audience. For example, do the coefficients have the expected sign? Are the sizes (magnitudes) of the coefficients reasonable, and can you put them in real world terms?
 
+      -going to need sum() of linear regression 
+      -cor() or ggplot() to see if there is any multicollinearity 
+
 For other kinds of analysis, what you give is highly dependent on the type of analysis you do. But in general, talk about assumptions, if they are appropriate, how they might not be appropriate, and why you chose this type of analysis. 
 
 ## Visualization and interpretation of the results
@@ -52,6 +71,8 @@ Create visualizations of the results, focusing on visualizations that
 - help describe aspects of the results that have real-world interpretation 
 - help the reader understand how the model addresses the problem you are studying. 
 
+      -have graph of occupancy from earlier but w/ multiple regression model on top in order to answer the         above two questions? 
+      
 **Visualizations are one of the most powerful ways to communicate information to the reader, so it is important to spend time producing clear, descriptive, eye-catching visualizations.**
 
 Discuss the results of the model or models you chose, and describe how they are related to the problem statement or question that you were trying to answer in the project.  
@@ -61,3 +82,7 @@ If you build multiple models or perform multiple types of analysis, compare the 
 ## Conclusions and recommendations
 A few sentences stating conclusions, recommendations, and ideas for future work and improvements.
 
+-conclusions: 
+-recommendations: ?
+-ideas for future work: 
+-improvements: use hourly or subhourly weather data rather than daily weather data to be able to better caculate the correlation between varying weather and dning hall occupancy 
