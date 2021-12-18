@@ -30,25 +30,18 @@ We performed a great deal of data cleaning in order to make this observational d
 
 Then, we created an algorithm to compute summary data for crowdedness across entire meals, grouping observations and calculating weighted averages over time ranges according to historical dining hall opening times.
 
-[INSERT DISCUSSION OF WEATHER DATA]
+The second data set we used for our analysis is a New Haven daily weather data set from the National Oceanic and Atmospheric Administrations (NOAA). Through their website, we made a climate data online order. The weather data set begins on 01/02/2018 and ends on 12/05/2021. After filtering out some variables we did not find particularly useful for our analysis, our final data set contained information on: station name, geographic location (New Haven Tweed Airport), date, precipitation, max temperature, and min temperature. 
 
 Having this data, we set about to answer several questions:
 
 * Is there a statistically significant difference between levels of dining hall attendance at different meals (Breakfast, Lunch, Dinner)?
 * Is there a difference between attendance to dining halls on weekends vs weekdays?
-* Is there a statistically significant decrease in dining hall attendance during "Family Dinner"? (i.e. sunday nights)
+* Is there a statistically significant decrease in dining hall attendance during "Family Dinner"? (i.e. Sunday nights)
 * To what extent do weather conditions affect dining hall attendance?
 
 
 An overview of your report, including one or so sentences on each of these:
 
-- a non-technical description of the problem you are trying to solve or the question you are trying to answer, and why you are trying to answer that question
-
-      - see if there is a correlation between dining hall occupancy and New Haven weather
-
-- a non-technical description of the data, where it came from, and what it contains, including the predictors, the outcome, and the observations
-
-      -[@ ERIK, can you quickly jot stuff down here, it can be note style I'll fix it up before we submit]
 
 - a non-technical description of what kind of analysis you did and how to interpret the results of the model
 
@@ -100,5 +93,5 @@ A few sentences stating conclusions, recommendations, and ideas for future work 
 
 -conclusions:
 -recommendations: ?
--ideas for future work:
--improvements: use hourly or subhourly weather data rather than daily weather data to be able to better caculate the correlation between varying weather and dning hall occupancy
+-ideas for future work: 
+-improvements: use hourly or sub-hourly weather data rather than daily weather data to be able to better calculate the correlation between varying weather and dning hall occupancy
