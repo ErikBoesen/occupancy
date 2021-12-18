@@ -21,16 +21,24 @@ knitr::opts_chunk$set(echo   =FALSE,      ## show or suppress the code
                       )
 ```
 
-
 ## Introduction
 In this analysis, we took advantage of a dataset collected by one of our members on occupancy levels of Yale's 14 residential dining halls from spring 2019 through fall 2021 (though we were unfortunately forced to exclude data after March 2020 due to confounding variables related to COVID-19 service disruptions).
 
-Our dining hall occupancy dataset, which was collected on the server of the [Yale Menus](https://yalemenus.com) app run by one of our members, contains over 5.6 million records
+Our dining hall occupancy dataset contains over 5.6 million observations including timestamp, dining hall name, and a digit from 0-10 representing the fullness of that dining hall at the given point in time. This crowdedness is our outcome. Yale formerly provided this data through the Yale Dining website, from which it was collected constantly on the server of the [Yale Menus](https://yalemenus.com) app, which is run by one of our members.
+
+We performed a great deal of data cleaning in order to make this observational data more straightforward to analyze. We started by deduplicating our data—removing sequential observations for the same dining hall with the same crowdedness rating. This allowed us to significantly slim down the size of our data file in order to enable effective collaboration among our team via GitHub.
+
+Then, we created an algorithm to compute summary data for crowdedness across entire meals, grouping observations and calculating weighted averages over time ranges according to historical dining hall opening times.
+
+[INSERT DISCUSSION OF WEATHER DATA]
+
+Having this data, we set about to answer several questions:
 
 * Is there a statistically significant difference between levels of dining hall attendance at different meals (Breakfast, Lunch, Dinner)?
 * Is there a difference between attendance to dining halls on weekends vs weekdays?
 * Is there a statistically significant decrease in dining hall attendance during "Family Dinner"? (i.e. sunday nights)
 * To what extent do weather conditions affect dining hall attendance?
+
 
 An overview of your report, including one or so sentences on each of these:
 
