@@ -3,6 +3,8 @@ import json
 import datetime
 
 
+hall_ids = ('BK', 'BR', 'GH', 'DC', 'MC', 'JE', 'PC', 'SM', 'TD', 'SY', 'ES', 'TC', 'BF', 'MY')
+"""
 records = []
 with open('occupancy_raw.csv', newline='') as f:
     records = [
@@ -13,7 +15,6 @@ records = sorted(records, key=lambda record: record['datetime'])
 
 records_deduplicated = []
 
-hall_ids = ('BK', 'BR', 'GH', 'DC', 'MC', 'JE', 'PC', 'SM', 'TD', 'SY', 'ES', 'TC', 'BF', 'MY')
 current_occupancies = {hall_id: None for hall_id in hall_ids}
 last_update_timestamps = {hall_id: None for hall_id in hall_ids}
 delays = []
@@ -43,6 +44,14 @@ with open('occupancy_raw_deduplicated.csv', 'w') as f:
     dict_writer.writerows(records_deduplicated)
 
 records = records_deduplicated
+"""
+
+with open('occupancy_raw_deduplicated.csv', newline='') as f:
+    records = [
+        {k: v for k, v in row.items()}
+        for row in csv.DictReader(f, skipinitialspace=True)
+    ]
+records = sorted(records, key=lambda record: record['datetime'])
 
 meal_times = [
     {'name': 'Breakfast', 'start': '08:00', 'end': '11:00'},
@@ -53,9 +62,12 @@ meal_times = [
 meals = []
 current_meals = {hall_id: None for hall_id in hall_ids}
 
+date_epoch = datetime.date(2019, 4, 30)
+
 for record in records:
     hall_id = record['dhall']
     timestamp = datetime.datetime.strptime(record['datetime'], '%Y-%m-%d %H:%M:%S.%f')
+    date_int = (timestamp.date() - date_epoch).days
     time = timestamp.strftime('%H:%M')
     if current_meals[hall_id] is not None:
         if current_meals[hall_id]['end'] < time:
@@ -75,8 +87,10 @@ for record in records:
             continue
         current_meals[hall_id] = {
             'date': timestamp.strftime('%Y-%m-%d'),
+            'date_int': date_int,
             'hall_id': hall_id,
             'name': chosen_meal['name'],
+            'is_family_dinner': int(chosen_meal['name'] == 'Dinner' and timestamp.weekday() == 6),
             'start': chosen_meal['start'],
             'end': chosen_meal['end'],
             'records': [record],
