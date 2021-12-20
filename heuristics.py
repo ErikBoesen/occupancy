@@ -90,6 +90,7 @@ for record in records:
             'date_int': date_int,
             'hall_id': hall_id,
             'name': chosen_meal['name'],
+            'is_weekend': int(timestamp.weekday() >= 5),
             'is_family_dinner': int(chosen_meal['name'] == 'Dinner' and timestamp.weekday() == 6),
             'start': chosen_meal['start'],
             'end': chosen_meal['end'],
