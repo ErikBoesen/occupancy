@@ -59,10 +59,52 @@ meal_times = [
     {'name': 'Dinner', 'start': '17:00', 'end': '19:30'},
 ]
 
+def get_current_meal(hall_id, timestamp):
+    time = timestamp.strftime('%H:%M')
+    is_weekend = (timestamp.weekday() >= 5)
+    if is_weekend:
+        if '08:00' <= time <= '10:30':
+            if hall_id in ('GH', 'ES', 'MC'):
+                return {'name': 'Breakfast', 'start': '08:00', 'end': '10:30'}
+        elif '11:00' <= time <= '13:30':
+            # TODO: call it Brunch instead?
+            return {'name': 'Lunch', 'start': '11:00', 'end': '13:30'}
+        elif '17:00' <= time <= '19:00':
+            return {'name': 'Dinner', 'start': '17:00', 'end': '19:00'}
+    else:
+        if hall_id in ('TD', 'BF', 'PC', 'DC', 'JE', 'GH', 'BK', 'TC'):
+            if hall_id == 'DC':
+                if '08:00' <= time <= '10:30':
+                    return {'name': 'Breakfast', 'start': '08:00', 'end': '10:30'}
+            else:
+                if '08:00' <= time <= '11:00':
+                    return {'name': 'Breakfast', 'start': '08:00', 'end': '11:00'}
+        else:
+            if '07:30' <= time <= '10:30':
+                return {'name': 'Breakfast', 'start': '07:30', 'end': '10:30'}
+
+        if hall_id == 'DC' and '11:00' <= time <= '13:30':
+            return {'name': 'Lunch', 'start': '11:00', 'end': '13:30'}
+        elif hall_id == 'GH' and '11:30' <= time <= '14:30':
+            return {'name': 'Lunch', 'start': '11:30', 'end': '14:30'}
+        elif hall_id == 'TC' and '11:30' <= time <= '15:00':
+            return {'name': 'Lunch', 'start': '11:30', 'end': '15:00'}
+        elif '11:30' <= time <= '13:30':
+            return {'name': 'Lunch', 'start': '11:30', 'end': '13:30'}
+
+        if hall_id in ('ES', 'MC') and '17:00' <= time <= '20:00':
+            return {'name': 'Dinner', 'start': '17:00', 'end': '20:00'}
+        elif '17:00' <= time <= '19:30':
+            return {'name': 'Dinner', 'start': '17:00', 'end': '19:30'}
+
+    return None
+
+
 meals = []
 current_meals = {hall_id: None for hall_id in hall_ids}
 
 date_epoch = datetime.date(2019, 4, 30)
+
 
 for record in records:
     hall_id = record['dhall']
@@ -77,10 +119,7 @@ for record in records:
             current_meals[hall_id]['records'].append(record)
 
     if current_meals[hall_id] is None:
-        chosen_meal = None
-        for meal_time in meal_times:
-            if meal_time['start'] <= time <= meal_time['end']:
-                chosen_meal = meal_time
+        chosen_meal = get_current_meal(hall_id, timestamp)
         if chosen_meal is None:
             print('Found record outside meal time')
             print(record)
