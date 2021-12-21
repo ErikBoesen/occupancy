@@ -63,38 +63,38 @@ def get_current_meal(hall_id, timestamp):
     time = timestamp.strftime('%H:%M')
     is_weekend = (timestamp.weekday() >= 5)
     if is_weekend:
-        if '08:00' <= time <= '10:30':
+        if '08:00' <= time < '10:30':
             if hall_id in ('GH', 'ES', 'MC'):
                 return {'name': 'Breakfast', 'start': '08:00', 'end': '10:30'}
-        elif '11:00' <= time <= '13:30':
+        elif '11:00' <= time < '13:30':
             # TODO: call it Brunch instead?
             return {'name': 'Lunch', 'start': '11:00', 'end': '13:30'}
-        elif '17:00' <= time <= '19:00':
+        elif '17:00' <= time < '19:00':
             return {'name': 'Dinner', 'start': '17:00', 'end': '19:00'}
     else:
         if hall_id in ('TD', 'BF', 'PC', 'DC', 'JE', 'GH', 'BK', 'TC'):
             if hall_id == 'DC':
-                if '08:00' <= time <= '10:30':
+                if '08:00' <= time < '10:30':
                     return {'name': 'Breakfast', 'start': '08:00', 'end': '10:30'}
             else:
-                if '08:00' <= time <= '11:00':
+                if '08:00' <= time < '11:00':
                     return {'name': 'Breakfast', 'start': '08:00', 'end': '11:00'}
         else:
-            if '07:30' <= time <= '10:30':
+            if '07:30' <= time < '10:30':
                 return {'name': 'Breakfast', 'start': '07:30', 'end': '10:30'}
 
-        if hall_id == 'DC' and '11:00' <= time <= '13:30':
+        if hall_id == 'DC' and '11:00' <= time < '13:30':
             return {'name': 'Lunch', 'start': '11:00', 'end': '13:30'}
-        elif hall_id == 'GH' and '11:30' <= time <= '14:30':
+        elif hall_id == 'GH' and '11:30' <= time < '14:30':
             return {'name': 'Lunch', 'start': '11:30', 'end': '14:30'}
-        elif hall_id == 'TC' and '11:30' <= time <= '15:00':
+        elif hall_id == 'TC' and '11:30' <= time < '15:00':
             return {'name': 'Lunch', 'start': '11:30', 'end': '15:00'}
-        elif '11:30' <= time <= '13:30':
+        elif '11:30' <= time < '13:30':
             return {'name': 'Lunch', 'start': '11:30', 'end': '13:30'}
 
-        if hall_id in ('ES', 'MC') and '17:00' <= time <= '20:00':
+        if hall_id in ('ES', 'MC') and '17:00' <= time < '20:00':
             return {'name': 'Dinner', 'start': '17:00', 'end': '20:00'}
-        elif '17:00' <= time <= '19:30':
+        elif '17:00' <= time < '19:30':
             return {'name': 'Dinner', 'start': '17:00', 'end': '19:30'}
 
     return None
@@ -109,10 +109,11 @@ date_epoch = datetime.date(2019, 4, 30)
 for record in records:
     hall_id = record['dhall']
     timestamp = datetime.datetime.strptime(record['datetime'], '%Y-%m-%d %H:%M:%S.%f')
+    date = timestamp.strftime('%Y-%m-%d')
     date_int = (timestamp.date() - date_epoch).days
     time = timestamp.strftime('%H:%M')
     if current_meals[hall_id] is not None:
-        if current_meals[hall_id]['end'] < time:
+        if current_meals[hall_id]['date'] != date or current_meals[hall_id]['end'] < time:
             meals.append(current_meals[hall_id])
             current_meals[hall_id] = None
         else:
@@ -125,7 +126,7 @@ for record in records:
             print(record)
             continue
         current_meals[hall_id] = {
-            'date': timestamp.strftime('%Y-%m-%d'),
+            'date': date,
             'date_int': date_int,
             'hall_id': hall_id,
             'name': chosen_meal['name'],
@@ -159,7 +160,8 @@ for i, meal in enumerate(meals):
 
     last_occupancy = 0
     last_time = start
-    for record in meal.pop('records'):
+    records = meal.pop('records')
+    for record in records:
         occupancy = int(record['crowdedness'])
         time = datetime.datetime.strptime(record['datetime'], '%Y-%m-%d %H:%M:%S.%f').time()
 
@@ -174,6 +176,14 @@ for i, meal in enumerate(meals):
     average_occupancy = total_occupancy / time_elapsed(start, end)
     meal['average_occupancy'] = average_occupancy
     meal['max_occupancy'] = max_occupancy
+
+    # DEBUG
+    if not (0 <= average_occupancy <= 10):
+        print('UH OH, NOT GOOD!')
+        print(meal)
+        print('\n'.join([str(record) for record in records]))
+        import sys
+        sys.exit(1)
 
     meals[i] = meal
 
