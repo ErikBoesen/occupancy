@@ -19,6 +19,8 @@ knitr::opts_chunk$set(echo   =FALSE,      ## show or suppress the code
                       fig.height = 5,     ## set the default height
                       fig.weight = 5      ## set the default width
                       )
+library(tidyverse)
+library(GGally)
 ```
 
 ## Introduction
@@ -54,9 +56,9 @@ An overview of your report, including one or so sentences on each of these:
 ## Data exploration and visualization
 This section will have descriptive statistics and visualizations of the raw data.  Reveal to the reader any interesting relationships in the data, and if you are doing multiple regression, convince the reader that the predictors are related to the outcome. Visualizations are one of the most powerful ways to communicate information to the reader, so it is important to spend time producing clear, descriptive, eye-catching visualizations.
 
-    -visual representation of the data (i.e occupancy and time ... what is our time interval??) w/out             multiple regression model
-    -maybe start off with some graphs between predictors and occupancy for the "visualization" part then run      lm for each graph to "convince the reader that the predictors are related to the outcome"
-
+```{r}
+ggpairs(d[,c('average_occupancy','date_int','is_weekend_and_not_family_dinner','is_family_dinner','PRCP','TMAX','TMIN')])
+```
 
 
 ## Modeling/Analysis
@@ -69,8 +71,63 @@ Describe the regression model(s) used or the analysis that was performed. For ea
 - whether or not you think the model is appropriate for this kind of data, and why
 - how easy/hard it is to interpret the results and explain them to either a technical or non-technical audience. For example, do the coefficients have the expected sign? Are the sizes (magnitudes) of the coefficients reasonable, and can you put them in real world terms?
 
-      -going to need sum() of linear regression
-      -cor() or ggplot() to see if there is any multicollinearity
+```{r}
+d <- read.csv("combined.csv")
+d <- d %>%
+  mutate(
+    is_weekend_and_not_family_dinner = ifelse(is_weekend==1,ifelse(is_family_dinner==0,1,0),0),
+  )
+d_formatted <- d %>%
+  select(average_occupancy, is_family_dinner, is_weekend, name) %>%
+  mutate(
+    is_family_dinner = ifelse(is_family_dinner==1,"True","False"),
+    is_weekend = ifelse(is_weekend==1,"True","False")
+  )
+```
+
+```{r}
+#Comparing occupancy of meals
+ggplot(d, aes(x=factor(name, levels=c("Breakfast", "Lunch", "Dinner")), y=average_occupancy)) +
+  geom_boxplot() +
+  xlab("Meal")
+print("Breakfast")
+summary(d %>% filter(name=="Breakfast") %>% select(average_occupancy))
+print("Lunch")
+summary(d %>% filter(name=="Lunch") %>% select(average_occupancy))
+print("Dinner")
+summary(d %>% filter(name=="Dinner") %>% select(average_occupancy))
+```
+
+```{r}
+#Comparing occupancy of weekend dinners
+ggplot(d_formatted, aes(x=factor(is_weekend, levels=c("False","True")), y=average_occupancy)) +
+  geom_boxplot() +
+  xlab("Is Weekend")
+print("Is Not Weekend")
+summary(d_formatted %>% filter(is_weekend=="False") %>% select(average_occupancy))
+print("Is Weekend")
+summary(d_formatted %>% filter(is_weekend=="True") %>% select(average_occupancy))
+```
+
+```{r}
+d_formatted_dinner_only <- d_formatted %>%
+  filter(name=="Dinner")
+#Comparing occupancy of family dinner to other dinners
+ggplot(d_formatted_dinner_only, aes(x=factor(is_family_dinner, levels=c("False","True")), y=average_occupancy)) +
+  geom_boxplot() +
+  xlab("Is Family Dinner")
+
+print("Is Not Family Dinner")
+summary(d_formatted_dinner_only %>% filter(is_family_dinner=="False") %>% select(average_occupancy))
+print("Is Family Dinner")
+summary(d_formatted_dinner_only %>% filter(is_family_dinner=="True") %>% select(average_occupancy))
+```
+
+```{r}
+m1 = lm(average_occupancy ~ name + date_int + is_weekend_and_not_family_dinner + is_family_dinner + TMIN, data=d)
+summary(m1)
+```
+
 
 For other kinds of analysis, what you give is highly dependent on the type of analysis you do. But in general, talk about assumptions, if they are appropriate, how they might not be appropriate, and why you chose this type of analysis.
 
