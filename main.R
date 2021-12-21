@@ -33,3 +33,6 @@ summary(m1)
 
 m2 = lm(average_occupancy ~ date_int + TMIN, data=d)
 summary(m2)
+
+m3 = lm(average_occupancy ~ name + date_int + is_weekend + is_family_dinner + PRCP + TMAX + TMIN, data=d)
+summary(m3)
