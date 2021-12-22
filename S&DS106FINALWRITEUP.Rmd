@@ -4,9 +4,9 @@ author: "Nathan Ahn, Erik Bosen, & Carmen Muniz-Almaguer"
 date: "Due 12/22/2021"
 output:
   pdf_document: default
+  word_document: default
   html_document:
     df_print: paged
-  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -21,6 +21,20 @@ knitr::opts_chunk$set(echo   =FALSE,      ## show or suppress the code
                       )
 library(tidyverse)
 library(GGally)
+d <- read.csv("combined.csv")
+d <- d %>%
+  mutate(
+    is_weekend_and_not_family_dinner = ifelse(is_weekend==1,ifelse(is_family_dinner==0,1,0),0),
+    is_breakfast = ifelse(name=="Breakfast",1,0),
+    is_lunch = ifelse(name=="Lunch",1,0),
+    is_dinner = ifelse(name=="Dinner",1,0)
+  )
+d_formatted <- d %>%
+  select(average_occupancy, is_family_dinner, is_weekend, name) %>%
+  mutate(
+    is_family_dinner = ifelse(is_family_dinner==1,"True","False"),
+    is_weekend = ifelse(is_weekend==1,"True","False")
+  )
 ```
 
 ## Introduction
@@ -36,60 +50,57 @@ The second data set we used for our analysis is a New Haven daily weather data s
 
 Having this data, we set about to answer several questions:
 
-* Is there a statistically significant difference between levels of dining hall attendance at different meals (Breakfast, Lunch, Dinner)?
+* Is there a statistically significant difference between levels of dining hall attendance at different meals (breakfast, lunch, dinner)?
 * Is there a difference between attendance to dining halls on weekends vs weekdays?
 * Is there a statistically significant decrease in dining hall attendance during "Family Dinner"? (i.e. Sunday nights)
 * To what extent do weather conditions affect dining hall attendance?
 
-
-An overview of your report, including one or so sentences on each of these:
-
-
-- a non-technical description of what kind of analysis you did and how to interpret the results of the model
-
-      - multiple regression model with the variables 'prcp' 'tmax' and 'tmin' in order to predict occupancy
-
-- a non-technical description of the results of the model and main takeaways.
-
-      - TBD
+We identified possible predictors out of the variables we had within our combined datasets (weather and occupancy). We then created a model using these variables to see which ones best predicted the average occupancy of the dining halls. Our initial predictors were the date, whether it was the weekend (and not family dinner), whether it was a family dinner night, the amount of precipitation, the maximum temperature for the day, and the minimum temperature for the day. Our final model removed the precipitation variable as we deemed it was statistically insignificant as a predictor. We determined that the most significant variable in the prediction of dining hall occupancy is the date.
 
 ## Data exploration and visualization
-This section will have descriptive statistics and visualizations of the raw data.  Reveal to the reader any interesting relationships in the data, and if you are doing multiple regression, convince the reader that the predictors are related to the outcome. Visualizations are one of the most powerful ways to communicate information to the reader, so it is important to spend time producing clear, descriptive, eye-catching visualizations.
 
 ```{r}
-ggpairs(d[,c('average_occupancy','date_int','is_weekend_and_not_family_dinner','is_family_dinner','PRCP','TMAX','TMIN')])
+ggpairs(d[,c('average_occupancy','date_int','is_weekend_and_not_family_dinner','is_family_dinner','PRCP','TMAX','TMIN', 'is_breakfast', 'is_lunch', 'is_dinner')])
 ```
 
+The predictors we picked for our final model had a statistically significant correlation with average occupancy. In descending order of correlation, these are `date_int`, `name` (which meal: breakfast, lunch, or dinner), `TMIN` (minimum temperature for a given day), `TMAX` (maximum temperature for a given day), `is_family_dinner`, and `is_weekend_and_not_family_dinner`. `name` is encapsulates the Boolean variables of `is_breakfast`, `is_lunch`, and `is_dinner` for this correlation analysis. Later in our multiple regression, we can use the categorical variable of `name` for the same Boolean effect. `TMAX` was later removed in an effort to avoid multicollinearity within our model as we deemed the variable had too high of a correlation with `TMIN`. This correlation makes intuitive sense, as days with a high or low maximum temperature are likely to have a similar minimum temperature. `PRCP` (precipitation) was also not included in the final model as we deemed it too statistically insignificant to include in the model. Specifically, its correlation with `average_occupancy` is -0.008. All variables chosen for the final model have a significance code of three stars with `average_occupancy`.
 
 ## Modeling/Analysis
-Describe the regression model(s) used or the analysis that was performed. For each regression model, discuss
 
-- any assumptions that are made
-- the observations, the predictors, and the outcome (the rows of your data, the columns of your data, and which column will be $y$)
-- what the coefficients mean and how this is related to your problem
-- appropriate measures of the performance of the model, such as adjusted R^2
-- whether or not you think the model is appropriate for this kind of data, and why
-- how easy/hard it is to interpret the results and explain them to either a technical or non-technical audience. For example, do the coefficients have the expected sign? Are the sizes (magnitudes) of the coefficients reasonable, and can you put them in real world terms?
+We assume that our occupancy data is reasonably accurate to real-world occupancy of the dining halls. We were unable to acquire hourly weather data for New Haven, so we assume that our weather data per day has sufficient granularity to conduct an accurate analysis.
+
+Our combined data is formatted with each row representing a unique meal block, dining hall, and day. Therefore each day has $3\times 14$ data points, for $3$ meals and $14$ dining halls. Different columns represent different outcome variables (`average_occupancy` and `max_occupancy`) or potential predictor variables. In some cases, auxiliary dataframes were created for the purposes of data analysis; for example, conversion of Boolean values to integers. The non-auxiliary variables are listed below:
+```{R}
+colnames(d)
+```
+
 
 ```{r}
-d <- read.csv("combined.csv")
-d <- d %>%
-  mutate(
-    is_weekend_and_not_family_dinner = ifelse(is_weekend==1,ifelse(is_family_dinner==0,1,0),0),
-  )
-d_formatted <- d %>%
-  select(average_occupancy, is_family_dinner, is_weekend, name) %>%
-  mutate(
-    is_family_dinner = ifelse(is_family_dinner==1,"True","False"),
-    is_weekend = ifelse(is_weekend==1,"True","False")
-  )
+m1 = lm(average_occupancy ~ name + date_int + is_weekend_and_not_family_dinner + is_family_dinner + TMIN, data=d)
+summary(m1)
 ```
+All of our predictors have a significance code of two or three stars, indicating that they are statistically significant in the determination of average occupancy for our model. The coefficients show that variable's effect on the average occupancy. We are assuming that for a given variable, the change is based on all other variables being held constant. This is an assumption, since our model inherently has some amount of collinearity.
+
+We determine that there is a statistically significant difference between levels of dining hall attendance at different meals (breakfast, lunch, and dinner). For the above coefficients, breakfast happens to be our baseline of the Boolean variables. If it is lunch, then there is a predicted increase in average occupancy of about 1.28. If it is dinner, then there is a predicted increase in average occupancy of about 1.37. From these, we can determine that the occupancy for breakfast is predicted to be much lower than lunch and dinner.
+
+The model predicts an increase in occupancy on family dinner nights by 0.152.
+
+Some weather conditions are predicted to have an affect on dining hall attendance. Precipitation was removed earlier due to demonstrating a statistically insignificant effect in predicting occupancy. Therefore, the only weather condition we included in our model was `TMIN` (the minimum temperature for a given day). `TMIN` was chosen over `TMAX` due to having a higher correlation with `average_occupancy`. The negative coefficient for `TMIN` indicates that the model predicts the occupancy to decrease as the minimum temperature increases. 
+
+Lastly, if it is the weekend but not a family dinner night, then the occupancy is predicted to decrease by 0.540.
+
+Our adjusted $R^2$ is 0.503, indicating that our model does well to predict the average occupancy of dining halls. This model is generally fairly appropriate for this kind of data, mixing Boolean and numerical variables to determine occupancy. The main issue with this model is `date` due to its cyclical nature, an issue we will further discuss in the improvements section of our conclusion.
+
+Due to the real-life and applicable nature of the subject matter, it is rather easy to explain the data and the variables to a non-technical audience. For example, the high, positive coefficient for dinner may be explained by the general understanding that students are more free and awake during dinnertime resulting in the occupancy during dinner to be greater than breakfast (the baseline variable for the three meals). 
+
+## Visualization and interpretation of the results
 
 ```{r}
 #Comparing occupancy of meals
 ggplot(d, aes(x=factor(name, levels=c("Breakfast", "Lunch", "Dinner")), y=average_occupancy)) +
   geom_boxplot() +
-  xlab("Meal")
+  xlab("Meal") +
+  ylab("Average Occupancy")
 print("Breakfast")
 summary(d %>% filter(name=="Breakfast") %>% select(average_occupancy))
 print("Lunch")
@@ -98,16 +109,21 @@ print("Dinner")
 summary(d %>% filter(name=="Dinner") %>% select(average_occupancy))
 ```
 
+As previously determined through our use of multiple regression coefficients earlier, the average occupancy is generally higher for lunch and dinner. The above box plot supports this conclusion as the median average occupancy for lunch (2.707) and dinner (3.049) is higher than that of breakfast (1.588). Yale students seem to not attend breakfast. This could be explained by Yale students waking up late and missing breakfast, or having to rush to class. The outliers for breakfast could be explained by few students consistently waking up early for breakfast. 
+
 ```{r}
 #Comparing occupancy of weekend dinners
 ggplot(d_formatted, aes(x=factor(is_weekend, levels=c("False","True")), y=average_occupancy)) +
   geom_boxplot() +
-  xlab("Is Weekend")
+  xlab("Is Weekend") +
+  ylab("Average Occupancy")
 print("Is Not Weekend")
 summary(d_formatted %>% filter(is_weekend=="False") %>% select(average_occupancy))
 print("Is Weekend")
 summary(d_formatted %>% filter(is_weekend=="True") %>% select(average_occupancy))
 ```
+
+Due to multicollinearity issues with family dinner nights (Sundays), we did not include `is_weekend` within our multiple regression. Through this box plot we can see that the median average occupancy tends to be slightly higher on weekends (2.563) than that of weekdays (2.285). One explanation for this data could be that students are more free on weekends, allowing them to attend dining halls more frequently. 
 
 ```{r}
 d_formatted_dinner_only <- d_formatted %>%
@@ -115,7 +131,8 @@ d_formatted_dinner_only <- d_formatted %>%
 #Comparing occupancy of family dinner to other dinners
 ggplot(d_formatted_dinner_only, aes(x=factor(is_family_dinner, levels=c("False","True")), y=average_occupancy)) +
   geom_boxplot() +
-  xlab("Is Family Dinner")
+  xlab("Is Family Dinner") +
+  ylab("Average Occupancy")
 
 print("Is Not Family Dinner")
 summary(d_formatted_dinner_only %>% filter(is_family_dinner=="False") %>% select(average_occupancy))
@@ -123,32 +140,20 @@ print("Is Family Dinner")
 summary(d_formatted_dinner_only %>% filter(is_family_dinner=="True") %>% select(average_occupancy))
 ```
 
-```{r}
-m1 = lm(average_occupancy ~ name + date_int + is_weekend_and_not_family_dinner + is_family_dinner + TMIN, data=d)
-summary(m1)
-```
+As previously determined through our use of multiple regression coefficients earlier, the average occupancy is generally higher during family dinners. The above box plot supports this conclusion as the median average occupancy for family dinners (3.614) is higher than that of non-family dinners (2.975). A possible explanation for the higher occupancy on family dinner nights is that students enjoy eating with their fellow residential college residents.
 
-
-For other kinds of analysis, what you give is highly dependent on the type of analysis you do. But in general, talk about assumptions, if they are appropriate, how they might not be appropriate, and why you chose this type of analysis.
-
-## Visualization and interpretation of the results
-Create visualizations of the results, focusing on visualizations that
-
-- help describe aspects of the results that have real-world interpretation
-- help the reader understand how the model addresses the problem you are studying.
-
-      -have graph of occupancy from earlier but w/ multiple regression model on top in order to answer the         above two questions?
-
-**Visualizations are one of the most powerful ways to communicate information to the reader, so it is important to spend time producing clear, descriptive, eye-catching visualizations.**
-
-Discuss the results of the model or models you chose, and describe how they are related to the problem statement or question that you were trying to answer in the project.
-
-If you build multiple models or perform multiple types of analysis, compare the measures of performance and the ease of interpretability across models or types of analysis, stating which model or models performed best, and which model or models were most interpretable.  Finally, decide which model or type of analysis is best for your particular problem based on some combination of performance and interpretability.
+Both boxplots and a multiple regression model allow us to gain insights into the dining habits of students based on certain variables. Boxplots are a good way of visualizing data to communicate information to the reader. They both convey similar trends, allowing us to arrive at the same conclusions for our questions regardless of which model is used. Multiple regressions allow us more exact prediction for a given variable, since it gives a numerical value effect on occupancy (assuming all other variables are held constant). Multiple regression analysis allows us to predict average occupancy based on multiple variables at once, whereas our boxplots focus on a single variable. Multiple regression is best for our model given the numerous variables we are considering at once. Therefore, the fact that it is based on more than one independent variable lends it to be a more realistic representation of average occupancy. 
 
 ## Conclusions and recommendations
-A few sentences stating conclusions, recommendations, and ideas for future work and improvements.
 
--conclusions:
--recommendations: ?
--ideas for future work: 
--improvements: use hourly or sub-hourly weather data rather than daily weather data to be able to better calculate the correlation between varying weather and dning hall occupancy
+We concluded that there is a statistically significant difference between levels of dining hall attendance at different meals (breakfast, lunch, and dinner). Specifically, average occupancy for breakfast tends to be lower than that of lunch and dinner. 
+
+We concluded that there is a difference in attendance to dining halls on weekends vs weekdays, though very small. Specifically, attendance on weekends in slightly higher than that of weekdays. 
+
+We concluded that there is a statistically significant increase in dining hall attendance during family dinners.
+
+We concluded that precipitation does not have a statistically significant affect on dining hall attendance, whereas minimum temperature on a given day does have a statistically significant effect on average occupancy. 
+
+Some improvements that could be made to our analyses include finding hourly or sub-hourly weather data and determine whether date is better modeled periodically based on the year. Having a higher granularity in our weather data would allow us to better align the weather with a certain mealtime. According to our model, as time goes on, average occupancy of the dining halls decreases. While this could be accurate, it is worth considering the time since the beginning of the academic year as a variable instead, which would be periodic over the course of multiple years. This could be a more accurate predictor depending on student behavior. This variable could be visualized as a graph to determine yearly trends based on the season, breaks, or exam periods. 
+
+Future work could include analysis of the difference in breakfast attendance for dining halls that have continental breakfast vs dining halls with hot breakfast. We could also include new predictors based on the academic calendar, such as breaks or exam periods to see how they impact the occupancy of dining halls. 
